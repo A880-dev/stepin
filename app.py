@@ -1,47 +1,55 @@
 import streamlit as st
-from sop_generator import generate_sop
-from application_tracker import add_application, get_applications_df
+from job_fetcher import fetch_jobs
+from utils import generate_sop  # Assuming you have this from earlier
+import os
+from dotenv import load_dotenv
 
-st.set_page_config(page_title="StepIn: Internship Assistant", layout="wide")
+load_dotenv()
 
-st.title("🚀 StepIn - Your Internship Buddy")
+st.set_page_config(page_title="StepIn - Internship Launcher", layout="centered")
 
-tab1, tab2 = st.tabs(["✍️ SOP Generator", "📋 Application Tracker"])
+# ------------------ UI TITLE ------------------ #
+st.title("🚀 StepIn: Your Internship Launcher")
+st.markdown("Craft your SOP and find matching internships all in one place.")
 
-with tab1:
-    st.subheader("Generate Your SOP")
+# ------------------ SOP GENERATION ------------------ #
+st.header("📝 SOP Generator")
+name = st.text_input("Your Name")
+background = st.text_area("Academic Background")
+interests = st.text_area("Your Interests")
+skills = st.text_area("Key Skills (comma-separated)")
+goal = st.text_area("Why do you want this internship?")
+company = st.text_input("Target Company Name")
 
-    name = st.text_input("Your Name")
-    background = st.text_area("Academic Background / Skills")
-    internship = st.text_input("Internship Role / Company")
-    motivation = st.text_area("Why do you want this internship?")
-    
-    if st.button("Generate SOP"):
-        if name and background and internship and motivation:
-            prompt = f"Write a Statement of Purpose for {name}, who is applying to a {internship} internship. Background: {background}. Motivation: {motivation}."
-            sop = generate_sop(prompt)
-            st.success("Here is your SOP:")
-            st.text_area("Generated SOP", sop, height=300)
+if st.button("Generate SOP"):
+    if all([name, background, interests, skills, goal, company]):
+        with st.spinner("Generating SOP..."):
+            sop = generate_sop(name, background, interests, skills, goal, company)
+            st.success("✅ SOP Generated!")
+            st.text_area("Your SOP", sop, height=300)
+    else:
+        st.warning("Please fill all the fields to generate SOP.")
+
+# ------------------ INTERNSHIP FINDER ------------------ #
+st.header("🔍 Find Matching Internships")
+
+job_query = st.text_input("Internship Role (e.g., Data Analyst Intern)", value="data analyst intern")
+location = st.text_input("Location", value="India")
+
+if st.button("Search Internships"):
+    with st.spinner("Fetching opportunities..."):
+        jobs = fetch_jobs(job_query, location)
+        if jobs:
+            for job in jobs[:5]:
+                st.markdown(f"### 📌 {job.get('job_title')}")
+                st.markdown(f"**🏢 Company**: {job.get('employer_name')}")
+                st.markdown(f"**🌍 Location**: {job.get('job_city', '')}, {job.get('job_country', '')}")
+                st.markdown(f"**📋 Type**: {job.get('job_employment_type', 'Not specified')}")
+                st.markdown(f"**🔗 [Apply Here]({job.get('job_apply_link')})**")
+                st.markdown("---")
         else:
-            st.warning("Please fill in all fields.")
+            st.error("No matching internships found. Try a different keyword or location.")
 
-with tab2:
-    st.subheader("Track Your Applications")
-    
-    with st.form("app_form"):
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            company = st.text_input("Company")
-        with col2:
-            role = st.text_input("Role")
-        with col3:
-            date_applied = st.date_input("Date Applied")
-        with col4:
-            status = st.selectbox("Status", ["Applied", "Interviewed", "Offered", "Rejected"])
-
-        submitted = st.form_submit_button("Add Application")
-        if submitted and company and role:
-            add_application(company, role, date_applied, status)
-            st.success("Application Added!")
-
-    st.dataframe(get_applications_df())
+# ------------------ Footer ------------------ #
+st.markdown("---")
+st.markdown("Made with ❤️ by StepIn Team")
