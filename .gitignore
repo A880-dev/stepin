@@ -205,3 +205,24 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+.env
+__pycache__/
+*.pyc
+# Python
+__pycache__/
+*.py[cod]
+*.env
+.env
+.venv/
+venv/
+*.sqlite3
+.DS_Store
+
+# Streamlit logs
+.streamlit/
+
+# Mac / Windows system files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
