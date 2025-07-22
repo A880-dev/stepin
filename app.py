@@ -1,6 +1,6 @@
 import streamlit as st
 from job_fetcher import fetch_jobs
-from utils import generate_sop  # Assuming you have this from earlier
+from sop_generator import generate_sop  # Assuming you have this from earlier
 import os
 from dotenv import load_dotenv
 
