@@ -1,36 +1,16 @@
 # job_fetcher.py
-import os
+
 import requests
-from dotenv import load_dotenv
 
-load_dotenv()
+def fetch_jobs(title, location):
+    url = f"https://remotive.io/api/remote-jobs?search={title}"
+    response = requests.get(url)
 
-API_KEY = os.getenv("RAPIDAPI_KEY")
-
-def fetch_jobs(query, location="India", num_pages=1):
-    url = "https://jsearch.p.rapidapi.com/search"
-    headers = {
-        "X-RapidAPI-Key": API_KEY,
-        "X-RapidAPI-Host": "jsearch.p.rapidapi.com"
-    }
-
-    jobs = []
-
-    for page in range(1, num_pages + 1):
-        params = {
-            "query": query,
-            "page": str(page),
-            "num_pages": "1",
-            "location": location
-        }
-
-        response = requests.get(url, headers=headers, params=params)
-
-        if response.status_code == 200:
-            data = response.json()
-            jobs.extend(data.get("data", []))
-        else:
-            print("Failed to fetch jobs:", response.status_code)
-            break
-
-    return jobs
+    if response.status_code == 200:
+        jobs = response.json().get("jobs", [])
+        # Optional filtering by location (Remotive has 'candidate_required_location' field)
+        if location:
+            jobs = [job for job in jobs if location.lower() in job.get("candidate_required_location", "").lower()]
+        return jobs
+    else:
+        return []

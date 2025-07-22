@@ -1,55 +1,32 @@
 import streamlit as st
-from job_fetcher import fetch_jobs
-from sop_generator import generate_sop  # Assuming you have this from earlier
-import os
-from dotenv import load_dotenv
+from job_fetcher import fetch_jobs  # This should be defined in job_fetcher.py
 
-load_dotenv()
+# Streamlit page settings
+st.set_page_config(page_title="Stepin – Internship Finder", layout="wide")
 
-st.set_page_config(page_title="StepIn - Internship Launcher", layout="centered")
+# App title
+st.title("🚀 Stepin – Your Personalized Internship Finder")
 
-# ------------------ UI TITLE ------------------ #
-st.title("🚀 StepIn: Your Internship Launcher")
-st.markdown("Craft your SOP and find matching internships all in one place.")
+# Input fields
+job_title = st.text_input("🎯 Enter Internship Role (e.g., Data Analyst Intern)")
+location = st.text_input("🌍 Enter Preferred Location (e.g., India, Remote)")
 
-# ------------------ SOP GENERATION ------------------ #
-st.header("📝 SOP Generator")
-name = st.text_input("Your Name")
-background = st.text_area("Academic Background")
-interests = st.text_area("Your Interests")
-skills = st.text_area("Key Skills (comma-separated)")
-goal = st.text_area("Why do you want this internship?")
-company = st.text_input("Target Company Name")
-
-if st.button("Generate SOP"):
-    if all([name, background, interests, skills, goal, company]):
-        with st.spinner("Generating SOP..."):
-            sop = generate_sop(name, background, interests, skills, goal, company)
-            st.success("✅ SOP Generated!")
-            st.text_area("Your SOP", sop, height=300)
+# Search button
+if st.button("🔎 Search Opportunities"):
+    if job_title:
+        with st.spinner("Looking for matching internships..."):
+            jobs = fetch_jobs(job_title, location)
+            if jobs:
+                st.success(f"✅ Found {len(jobs)} matching internships!")
+                for job in jobs[:10]:  # Show top 10 jobs
+                    st.markdown(f"### [{job['title']}]({job['url']})")
+                    st.write(f"**Company:** {job['company_name']}")
+                    st.write(f"**Location:** {job['candidate_required_location']}")
+                    st.write(f"**Type:** {job.get('job_type', 'Not specified')}")
+                    st.write(f"**Description:** {job['description'][:250]}...")  # Trimmed for display
+                    st.markdown("---")
+            else:
+                st.warning("❌ No internships found for this search.")
     else:
-        st.warning("Please fill all the fields to generate SOP.")
+        st.warning("⚠️ Please enter at least a job title.")
 
-# ------------------ INTERNSHIP FINDER ------------------ #
-st.header("🔍 Find Matching Internships")
-
-job_query = st.text_input("Internship Role (e.g., Data Analyst Intern)", value="data analyst intern")
-location = st.text_input("Location", value="India")
-
-if st.button("Search Internships"):
-    with st.spinner("Fetching opportunities..."):
-        jobs = fetch_jobs(job_query, location)
-        if jobs:
-            for job in jobs[:5]:
-                st.markdown(f"### 📌 {job.get('job_title')}")
-                st.markdown(f"**🏢 Company**: {job.get('employer_name')}")
-                st.markdown(f"**🌍 Location**: {job.get('job_city', '')}, {job.get('job_country', '')}")
-                st.markdown(f"**📋 Type**: {job.get('job_employment_type', 'Not specified')}")
-                st.markdown(f"**🔗 [Apply Here]({job.get('job_apply_link')})**")
-                st.markdown("---")
-        else:
-            st.error("No matching internships found. Try a different keyword or location.")
-
-# ------------------ Footer ------------------ #
-st.markdown("---")
-st.markdown("Made with ❤️ by StepIn Team")
